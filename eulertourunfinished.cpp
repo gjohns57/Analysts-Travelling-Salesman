@@ -30,6 +30,23 @@ public:
         findEulerTourUtil(start_vertex, tour);
         return tour;
     }
+    private:
+        void findEulerTourUtil(int u, vector<int>& tour) {
+            for (vector<pair<int, int> >::iterator it = adj[u].begin(); it != adj[u].end(); ++it) { // iterates through all edges
+                int v = it->first; // stores node number
+                if (it->second < 2) { // if the node has been traversed less than twice, we go to the next node
+                    it->second++; // increment
+                    for (vector<pair<int, int> >::iterator jt = adj[v].begin(); jt != adj[v].end(); ++jt) { // iterates through all edges of next vertex
+                        if (jt->first == u) { //
+                            jt->second++;
+                            break;
+                        }
+                    }
+                    findEulerTourUtil(v, tour);
+                    tour.push_back(u); // add vertex to
+                }
+            }
+        }
 };
 int main() {
     int V, E;
@@ -47,4 +64,16 @@ int main() {
         cin >> u >> v;
         graph.addEdge(u, v);
     }
+
+    vector<int> tour = graph.findEulerTour();
+
+    if (!tour.empty()) {
+        cout << "2-to-1 Euler Tour: ";
+        for (vector<int>::const_iterator it = tour.begin(); it != tour.end(); ++it) {
+            cout << *it << " ";
+        }
+        cout << endl;
+    }
+
+    return 0;
 }
