@@ -1,0 +1,13 @@
+prefix=/home/gjohns57/atsp/Analysts-Travelling-Salesman
+exec_prefix=/home/gjohns57/atsp/Analysts-Travelling-Salesman
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libigraph
+Description: A library for creating and manipulating graphs
+Version: 0.10.13
+URL: https://igraph.org
+Libs: -L${libdir} -ligraph
+Libs.private: -lm -lstdc++ -lblas -llapack -lgomp -lpthread
+Requires.private: 
+Cflags: -I${includedir}/igraph

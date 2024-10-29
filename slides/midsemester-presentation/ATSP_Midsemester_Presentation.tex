@@ -1,0 +1,94 @@
+\documentclass{beamer}
+
+\title{Analyst’s Traveling Salesman Problem Algorithm Implementation}
+\author{Gabriel Johnson and Robby Lawrence}
+\date{October 17, 2024}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+\frametitle{What is the Analyst’s Traveling Salesman Problem (ATSP)?}
+\begin{itemize}
+    \item The ASTP is a problem related to the more well-known
+    Traveling Salesman Problem (TSP).
+    \item While the TSP aims to find the shortest path touring a finite set of points, the ATSP asks if there exists a curve of finite length (rectifiable) that contains a given set of points in $\mathbb{R}^n$.
+    \item We follow the algorithm laid out in Time Complexity of the Analyst Traveling Salesman written by Anthony Ramirez and Vyron Vellis.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Language and Libraries}
+    \begin{itemize}
+        \item Our code is written in C++
+        \item We use igraph for efficient graph manipulation
+        \item Building is handled with CMake
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Goals}
+    \textbf{1} Develop a subprogram to output a 2-to-1 Euler tour of a graph.
+    \begin{itemize}
+        \item Takes as input a number of vertices, and an edge set between those vertices.
+        \item Outputs an ordering of the vertices that begins at the initial vertex, visits each edge twice, and ends at the initial vertex.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Goals}
+    \textbf{2} Develop a subprogram to output a sequence of vertex sets.
+    \begin{itemize}
+        \item Inputs a set of points in the plane
+        \item Outputs an increasing sequence vertex sets ($X_0 \subseteq X_1 \subseteq X_2 \subseteq \cdots$), given criteria determined in the paper.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Goals}
+    \textbf{3} Develop a subprogram to calculate ``local flatness"
+    \begin{itemize}
+        \item This program outputs the local flatness of the vertex set $V$ around $v$.
+        \item Inputs a vertex set $V$, a vertex $v \in V$.
+        \item Inspect a ball around $v$, find a ``line of best fit" for the points in the ball, and output a value corresponding to how well the line fits the points 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Progress}
+
+    Organization and build system
+    \begin{itemize}
+        \item igraph included in as a submodule to the repository
+        \item build script to build igraph on new system
+        \item CMake to build the project
+        \item build script to handle calling cmake for the project with the correct library dictories
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Progress}
+
+    Goal 1
+    \begin{itemize}
+        \item Used standard template library since igraph was not needed for this subprogram
+        \item Class structure consists of an unordered map with an integer representing the vertex number as the key and a vector of pairs of integers for the edges. Each pair in the vector has two integers: the first represents the other vertex the vertex is connected to, and the second is how many times this edge has been traversed.
+        \item Function that searches for the vertex numbered one and the helper function starting there.
+        \item The helper function recursively calls itself after iterating through the adjacency vector for a given node, checking each edge to see if it's been traversed less than twice. At the first available node, it increments the edge both ways, then breaks off and recurses.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Progress}
+
+    Goal 3
+    \begin{itemize}
+        \item The flatness function takes in a set of points in $\mathbb{R}^2$, a vertex $v$ as an index into the set of points, a value for $\epsilon$, and a value $k$, from which the radius of the ball is computed. Returns the flatness.
+        \item Point set class which handles finding intersections between the ball and the set of points
+        \item Needs testing
+    \end{itemize}
+\end{frame}
+
+\end{document}
