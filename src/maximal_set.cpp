@@ -129,7 +129,7 @@ in the net for the rest of the time. */
 
 int main() {
     unordered_map<pair<Point, Point>, double, PointPairHash, PointPairEqual> distances;
-    Point v0 = Point(1,1);
+    double v0x,v0y;
     vector<Point> points,net;
     int num_points;
     double dum_x,dum_y;
@@ -142,6 +142,9 @@ int main() {
     }
     distances = generate_distances(points);
     unordered_map<pair<Point,Point>,double,PointPairHash,PointPairEqual>::iterator it;
+    cout << "Enter starting point: (x y)" << endl;
+    cin >> v0x >> v0y;
+    Point v0 = Point(v0x,v0y);
     vector<int> set = generate_S(points, distances,v0);
     for (size_t i = 0;i<set.size();i++) {
         cout << set[i] << " ";
