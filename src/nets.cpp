@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <sstream>
+#include <set>
 using namespace std;
 
 class Point { // point class that stores X and Y values
@@ -32,6 +33,9 @@ class Point { // point class that stores X and Y values
 
         bool operator==(const Point& point) const {
                 return x == point.x && y == point.y;
+            }
+        bool operator!=(const Point& point) const {
+                return !(x == point.x && y == point.y);
             }
 };
 
@@ -95,53 +99,50 @@ vector<int> generate_S(vector<Point>& points, unordered_map<pair<Point,Point>,do
     return set;
 }
 
-vector<Point> generate_all_nets(vector<Point> points,Point v0,vector<int> set,unordered_map<pair<Point,Point>,double,PointPairHash,PointPairEqual> distances) {
-    vector<Point> net;
+set<vector<Point> > generate_all_nets(vector<Point> points,Point v0,vector<int> numbers,unordered_map<pair<Point,Point>,double,PointPairHash,PointPairEqual> distances) {
+    set<vector<Point> > nets; // we use a set of vectors of Points so that we can ignore when the sets come out the same
+    vector<Point> net,final_sequence;
     net.push_back(v0); // v0 starts in the net
-    for (size_t i = 0;i<set.size();i++) { // this loop iterates through set
+    for (size_t i = 0;i<numbers.size();i++) { // this loop iterates through set
         for (size_t j = 0;j<points.size();j++) { // this loop generates a net with the power 0.5^set[i]
             vector<Point>::iterator finder = find(net.begin(),net.end(),points[j]);
             if (finder != net.end()) {
                 continue; // this means that the element is already in the net
             }
             it = distances.find(make_pair(v0,points[j]));
-            if (it->second > pow(0.5,set[i])) {
+            if (it->second > pow(0.5,numbers[i])) {
                 net.push_back(points[j]);
             }
         }
+        nets.insert(net); // store the current net
         // output the net
         cout << "Net " << i << ": ";
         for (size_t output_i = 0;output_i<net.size();output_i++) {
             cout << output_point(net[output_i]) << " ";
         }
+
         cout << '\n';
     }
-    return net;
+    return nets;
 }
-/* okay I'm writing this so I have a workflow for the rest of this program:
-1. choose a point in the vector of points that's going to serve as v_0 - done
-2. generate distances of all points - done
-3. generate S = log(||v_0 - v_i||), truncate double to get a vector of integers - done
-4. start building epsilon nets: for the nth epsilon net, we start building a new vector of points that are more than
-(1/2)^n Euclidean distance away from ALL points currently in the net. Each point that has been put in the net STAYS
-in the net for the rest of the time. */
-
 
 int main() {
+    // initialize everything
     unordered_map<pair<Point, Point>, double, PointPairHash, PointPairEqual> distances;
     double v0x,v0y;
-    vector<Point> points,net;
+    vector<Point> points;
+    set<vector<Point> > nets;
     int num_points;
     double dum_x,dum_y;
+    // prompt user
     cout << "How many points?" << endl;
     cin >> num_points;
     cout << "Enter the points: (x y)" << endl;
-    for (int i = 0;i<num_points;i++) {
+    for (int i = 0;i<num_points;i++) { // create vertex set
         cin >> dum_x >> dum_y;
         points.push_back(Point(dum_x,dum_y));
     }
-    distances = generate_distances(points);
-    unordered_map<pair<Point,Point>,double,PointPairHash,PointPairEqual>::iterator it;
+    distances = generate_distances(points); // create distances map
     cout << "Enter starting point: (x y)" << endl;
     cin >> v0x >> v0y;
     Point v0 = Point(v0x,v0y);
@@ -150,7 +151,7 @@ int main() {
         cout << set[i] << " ";
     }
     cout << '\n';
-    net = generate_all_nets(points, v0, set, distances);
+    nets = generate_all_nets(points, v0, set, distances);
     // now we have to generate a table of n_k
 
     /*  output
