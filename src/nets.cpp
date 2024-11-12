@@ -37,6 +37,9 @@ class Point { // point class that stores X and Y values
         bool operator!=(const Point& point) const {
                 return !(x == point.x && y == point.y);
             }
+        bool operator<(const Point& point) const {
+                return x < point.x || (x == point.x && y < point.y);
+            }
 };
 
 struct PointPairHash { // hash function for the unordered_map
@@ -59,7 +62,6 @@ string output_point(Point& a) { // function for testing and output
     return ss.str();
 }
 
-unordered_map<pair<Point,Point>,double,PointPairHash,PointPairEqual>::const_iterator it; // now I can use this everywhere
 
 unordered_map<pair<Point, Point>, double,PointPairHash,PointPairEqual> generate_distances(vector<Point> points) { // function to create table of distances
     unordered_map<pair<Point, Point>, double,PointPairHash,PointPairEqual> distances; // initialize table
@@ -99,32 +101,40 @@ vector<int> generate_S(vector<Point>& points, unordered_map<pair<Point,Point>,do
     return set;
 }
 
-set<vector<Point> > generate_all_nets(vector<Point> points,Point v0,vector<int> numbers,unordered_map<pair<Point,Point>,double,PointPairHash,PointPairEqual> distances) {
-    set<vector<Point> > nets; // we use a set of vectors of Points so that we can ignore when the sets come out the same
-    vector<Point> net,final_sequence;
-    net.push_back(v0); // v0 starts in the net
-    for (size_t i = 0;i<numbers.size();i++) { // this loop iterates through set
-        for (size_t j = 0;j<points.size();j++) { // this loop generates a net with the power 0.5^set[i]
-            vector<Point>::iterator finder = find(net.begin(),net.end(),points[j]);
-            if (finder != net.end()) {
-                continue; // this means that the element is already in the net
+set<vector<Point> > generate_all_nets(vector<Point> points, Point v0, vector<int> numbers, unordered_map<pair<Point,Point>,double,PointPairHash,PointPairEqual> distances) {
+    set<vector<Point> > nets;
+    vector<Point> net;
+    net.push_back(v0);
+    nets.insert(net);
+    for (int n_k : numbers) {
+        vector<Point> previous_net = net; // use  last net
+        vector<Point> new_net = previous_net; // previous net
+        for (Point point : points) {
+            if (find(previous_net.begin(), previous_net.end(), point) != previous_net.end()) {
+                continue; // skip if the point is already in the net
             }
-            it = distances.find(make_pair(v0,points[j]));
-            if (it->second > pow(0.5,numbers[i])) {
-                net.push_back(points[j]);
+
+            bool val = true;
+            for (Point p_in_net : previous_net) {
+                double distance = distances[make_pair(p_in_net, point)];
+                if (distance <= pow(0.5, n_k)) {
+                    val = false;
+                    break;
+                }
             }
-        }
-        nets.insert(net); // store the current net
-        // output the net
-        cout << "Net " << i << ": ";
-        for (size_t output_i = 0;output_i<net.size();output_i++) {
-            cout << output_point(net[output_i]) << " ";
+
+            if (val) {
+                new_net.push_back(point);
+            }
         }
 
-        cout << '\n';
+        net = new_net;
+        nets.insert(net);
     }
+
     return nets;
 }
+
 
 int main() {
     // initialize everything
@@ -132,6 +142,7 @@ int main() {
     double v0x,v0y;
     vector<Point> points;
     set<vector<Point> > nets;
+    set<vector<Point> >::const_iterator it;
     int num_points;
     double dum_x,dum_y;
     // prompt user
@@ -150,8 +161,17 @@ int main() {
     for (size_t i = 0;i<set.size();i++) {
         cout << set[i] << " ";
     }
-    cout << '\n';
+    cout << '\n' << '\n';
     nets = generate_all_nets(points, v0, set, distances);
+    int counter = 1;
+    for (it = nets.begin();it != nets.end();it++) {
+      cout << "Net number " << counter << ": { ";
+      for (Point point : *it) {
+        cout << output_point(point) << " ";
+      }
+      cout << "}" << endl;
+      counter++;
+    }
     // now we have to generate a table of n_k
 
     /*  output
