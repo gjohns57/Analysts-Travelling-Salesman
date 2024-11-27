@@ -44,8 +44,8 @@ class Point { // point class that stores X and Y values
 
 struct PointPairHash { // hash function for the unordered_map
     size_t operator()(const pair<Point, Point>& p) const {
-            size_t h1 = std::hash<double>()(p.first.x_value()) ^ (std::hash<double>()(p.first.y_value()) << 1);
-            size_t h2 = std::hash<double>()(p.second.x_value()) ^ (std::hash<double>()(p.second.y_value()) << 1);
+            size_t h1 = hash<double>()(p.first.x_value()) ^ (hash<double>()(p.first.y_value()) << 1);
+            size_t h2 = hash<double>()(p.second.x_value()) ^ (hash<double>()(p.second.y_value()) << 1);
             return h1 ^ (h2 << 1);
         }
 };
@@ -93,7 +93,7 @@ vector<int> generate_S(vector<Point>& points, unordered_map<pair<Point,Point>,do
             continue; // we don't want v0 = v0
         }
         jt = distances.find(make_pair(v0,points[i])); // access the key-value pair in distances
-        element = abs((int)log2((jt->second)));
+        element = floor(-1*(log2((jt->second))));
         for (int j = -2;j<=2;j++) {
             set.push_back(element+j); // add the elements to the new set
         }
@@ -117,7 +117,7 @@ set<vector<Point> > generate_all_nets(vector<Point> points, Point v0, vector<int
             bool val = true;
             for (Point p_in_net : previous_net) {
                 double distance = distances[make_pair(p_in_net, point)];
-                if (distance <= pow(0.5, n_k)) {
+                if (distance < pow(0.5, n_k)) {
                     val = false;
                     break;
                 }
@@ -158,10 +158,11 @@ int main() {
     cin >> v0x >> v0y;
     Point v0 = Point(v0x,v0y);
     vector<int> set = generate_S(points, distances,v0);
+    cout << "S = {";
     for (size_t i = 0;i<set.size();i++) {
         cout << set[i] << " ";
     }
-    cout << '\n' << '\n';
+    cout << "}" << '\n' << '\n';
     nets = generate_all_nets(points, v0, set, distances);
     int counter = 1;
     for (it = nets.begin();it != nets.end();it++) {
