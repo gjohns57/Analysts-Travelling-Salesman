@@ -21,11 +21,11 @@ ysis, computational geometry, and optimization theory. It offers a deeper under-
 standing of the geometric properties of sets and the complexity of covering them
 with curves of finite length.
 
-History of the ATSP
-The ATSP was solved in 1990 by Jones [1]. In this paper, Jones completely re-
+# History of the ATSP
+The ATSP was solved in 1990 by Jones. In this paper, Jones completely re-
 solves the question posed by the ATSP: the result gives not only sufficient condi-
 tions for when a set in the plane is rectifiable, but also necessary conditions. Even
 more, Jones’ work gives a rectifiable curve whose length is a constant multiple of
 the length of the curve of optimal length passing through the set. In 1992, Okikiolu
-extended Peter Jones’ work to all Euclidean spaces [2]. Fifteen years later, Schul
+extended Peter Jones’ work to all Euclidean spaces. Fifteen years later, Schul
 extended the work of Jones and Okikiolu to the setting of Hilbert spaces.
