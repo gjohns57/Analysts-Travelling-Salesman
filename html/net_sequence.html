@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Nets Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #canvasContainer {
+            position: relative;
+            margin-top: 20px;
+        }
+        #pointsCanvas {
+            border: 1px solid black;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+        #buttons {
+            margin-top: 10px;
+        }
+        #inputSection {
+            margin-bottom: 20px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+        input, textarea {
+            width: 200px;
+        }
+        #netInfo {
+            font-weight: bold;
+        }
+        #buttons button {
+            padding: 10px 20px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nets Visualization</h1>
+    <div id="inputSection">
+        <label for="numPoints">How many points?</label>
+        <input type="number" id="numPoints" min="1" value="5"><br><br>
+        <div id="pointsInput">
+            <label for="pointsTextarea">Enter the points (x y), one per line:</label><br>
+            <textarea id="pointsTextarea" rows="5" cols="30">0 0
+1 1
+-1 1
+-1 -1
+1 -1</textarea><br><br>
+        </div>
+        <label for="v0Input">Enter starting point (x y):</label>
+        <input type="text" id="v0Input" value="0 0"><br><br>
+        <button id="startButton">Start Visualization</button>
+    </div>
+
+    <div id="canvasContainer">
+        <canvas id="pointsCanvas" width="600" height="600"></canvas>
+    </div>
+    <div id="controls">
+        <div id="netInfo"></div>
+        <div id="buttons">
+            <button id="prevNetButton">Previous Net</button>
+            <button id="nextNetButton">Next Net</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript code for Nets Visualization
+
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            var startButton = document.getElementById('startButton');
+            var numPointsInput = document.getElementById('numPoints');
+            var pointsTextarea = document.getElementById('pointsTextarea');
+            var v0Input = document.getElementById('v0Input');
+            var pointsCanvas = document.getElementById('pointsCanvas');
+            var canvasContainer = document.getElementById('canvasContainer');
+            var netInfo = document.getElementById('netInfo');
+            var prevNetButton = document.getElementById('prevNetButton');
+            var nextNetButton = document.getElementById('nextNetButton');
+            var ctx = pointsCanvas.getContext('2d');
+
+            var points = [];
+            var distances = {};
+            var v0Index = null;
+            var S = [];
+            var nets = [];
+            var pointAppearances = {};
+            var netIndex = 0;
+            var colors = ['black'];
+
+            // Hide the canvas and controls initially
+            canvasContainer.style.display = 'none';
+            netInfo.style.display = 'none';
+            prevNetButton.style.display = 'none';
+            nextNetButton.style.display = 'none';
+
+            // Start button event listener
+            startButton.addEventListener('click', function() {
+                // Read input values
+                var numPoints = parseInt(numPointsInput.value);
+                var pointsInput = pointsTextarea.value.trim().split('\n');
+                if (pointsInput.length !== numPoints) {
+                    alert('Number of points does not match input.');
+                    return;
+                }
+                points = [];
+                for (var i = 0; i < numPoints; i++) {
+                    var coords = pointsInput[i].trim().split(/\s+/);
+                    if (coords.length !== 2) {
+                        alert('Invalid point format at line ' + (i+1));
+                        return;
+                    }
+                    var x = parseFloat(coords[0]);
+                    var y = parseFloat(coords[1]);
+                    points.push({x: x, y: y});
+                }
+
+                // Get v0
+                var v0Coords = v0Input.value.trim().split(/\s+/);
+                if (v0Coords.length !== 2) {
+                    alert('Invalid starting point format.');
+                    return;
+                }
+                var v0x = parseFloat(v0Coords[0]);
+                var v0y = parseFloat(v0Coords[1]);
+                var v0 = {x: v0x, y: v0y};
+
+                // Check that v0 is in points
+                v0Index = null;
+                for (var i = 0; i < points.length; i++) {
+                    if (points[i].x === v0.x && points[i].y === v0.y) {
+                        v0Index = i;
+                        break;
+                    }
+                }
+                if (v0Index === null) {
+                    alert('Starting point v0 is not in the set of points.');
+                    return;
+                }
+
+                // Compute distances
+                distances = {};
+                for (var i = 0; i < points.length; i++) {
+                    for (var j = 0; j < points.length; j++) {
+                        var dx = points[i].x - points[j].x;
+                        var dy = points[i].y - points[j].y;
+                        var dist = Math.sqrt(dx*dx + dy*dy);
+                        distances[i + ',' + j] = dist;
+                    }
+                }
+
+                // Compute S
+                S = new Set();
+                for (var i = 0; i < points.length; i++) {
+                    if (i === v0Index) continue;
+                    var dist = distances[v0Index + ',' + i];
+                    if (dist === 0) continue;
+                    var s_element = Math.floor(-Math.log2(dist));
+                    for (var delta = -2; delta <= 2; delta++) {
+                        S.add(s_element + delta);
+                    }
+                }
+                S = Array.from(S).sort(function(a,b){return a - b;});
+                console.log('S = ' + S);
+
+                // Generate the nets
+                nets = [];
+                pointAppearances = {};
+                netIndex = 0;
+                // Initialize first net with v0
+                var net = [v0Index];
+                nets.push(net.slice());
+
+                // For s in S, generate the nets
+                for (var s_idx = 0; s_idx < S.length; s_idx++) {
+                    var s = S[s_idx];
+                    var previous_net = net.slice();
+                    var new_net = previous_net.slice();
+                    for (var i = 0; i < points.length; i++) {
+                        if (previous_net.includes(i)) continue;
+                        // Check that the point is at least 2^{-s} away from all points in previous net
+                        var val = true;
+                        for (var j = 0; j < previous_net.length; j++) {
+                            var p_idx = previous_net[j];
+                            var dist = distances[p_idx + ',' + i];
+                            if (dist < Math.pow(0.5, s)) {
+                                val = false;
+                                break;
+                            }
+                        }
+                        if (val) {
+                            new_net.push(i);
+                        }
+                    }
+                    net = new_net;
+                    // Check if the net is unique
+                    var net_str = net.slice().sort(function(a,b){return a - b;}).join(',');
+                    var nets_strs = nets.map(function(n){return n.slice().sort(function(a,b){return a - b;}).join(',');});
+                    if (!nets_strs.includes(net_str)) {
+                        nets.push(net.slice());
+                    }
+                }
+
+                // Determine point appearances
+                pointAppearances = {};
+                for (var net_idx = 0; net_idx < nets.length; net_idx++) {
+                    var net = nets[net_idx];
+                    for (var i = 0; i < net.length; i++) {
+                        var idx = net[i];
+                        if (!(idx in pointAppearances)) {
+                            pointAppearances[idx] = net_idx;
+                        }
+                    }
+                }
+
+                // Prepare colors
+                colors = [];
+                for (var i = 0; i < points.length; i++) {
+                    colors.push('black');
+                }
+
+                // Show canvas and controls
+                canvasContainer.style.display = 'block';
+                netInfo.style.display = 'block';
+                prevNetButton.style.display = 'inline-block';
+                nextNetButton.style.display = 'inline-block';
+
+                // Draw initial net
+                netIndex = 0;
+                updatePlot();
+
+            });
+
+            // Function to update the plot based on netIndex
+            function updatePlot() {
+                // Clear canvas
+                ctx.clearRect(0, 0, pointsCanvas.width, pointsCanvas.height);
+
+                // Determine point colors based on netIndex
+                for (var i = 0; i < points.length; i++) {
+                    if (pointAppearances[i] <= netIndex) {
+                        var colorIdx = pointAppearances[i] % 10;
+                        colors[i] = 'hsl(' + (colorIdx * 36) + ', 100%, 50%)';
+                    } else {
+                        colors[i] = 'black';
+                    }
+                }
+
+                // Draw points
+                var margin = 50;
+                var width = pointsCanvas.width - 2*margin;
+                var height = pointsCanvas.height - 2*margin;
+
+                // Compute scaling factors
+                var xs = points.map(function(p){return p.x;});
+                var ys = points.map(function(p){return p.y;});
+                var xMin = Math.min.apply(null, xs);
+                var xMax = Math.max.apply(null, xs);
+                var yMin = Math.min.apply(null, ys);
+                var yMax = Math.max.apply(null, ys);
+                var xRange = xMax - xMin;
+                var yRange = yMax - yMin;
+                if (xRange === 0) xRange = 1;
+                if (yRange === 0) yRange = 1;
+
+                // Adjust ranges to include some margin
+                xMin -= xRange * 0.1;
+                xMax += xRange * 0.1;
+                yMin -= yRange * 0.1;
+                yMax += yRange * 0.1;
+                xRange = xMax - xMin;
+                yRange = yMax - yMin;
+
+                // Draw coordinate axes
+                ctx.strokeStyle = 'lightgray';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                // x-axis
+                var xZero = margin + ((0 - xMin) / xRange) * width;
+                ctx.moveTo(xZero, margin);
+                ctx.lineTo(xZero, pointsCanvas.height - margin);
+                // y-axis
+                var yZero = pointsCanvas.height - (margin + ((0 - yMin) / yRange) * height);
+                ctx.moveTo(margin, yZero);
+                ctx.lineTo(pointsCanvas.width - margin, yZero);
+                ctx.stroke();
+
+                // Draw points
+                for (var i = 0; i < points.length; i++) {
+                    var p = points[i];
+                    var x = margin + ((p.x - xMin) / xRange) * width;
+                    var y = pointsCanvas.height - (margin + ((p.y - yMin) / yRange) * height);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, 2*Math.PI);
+                    ctx.fillStyle = colors[i];
+                    ctx.fill();
+                    ctx.strokeStyle = 'black';
+                    ctx.stroke();
+                }
+
+                // Update net info
+                netInfo.textContent = 'Net ' + (netIndex + 1) + ' / ' + nets.length;
+
+            }
+
+            // Next Net button event listener
+            nextNetButton.addEventListener('click', function() {
+                if (netIndex < nets.length -1) {
+                    netIndex++;
+                    updatePlot();
+                }
+            });
+
+            // Previous Net button event listener
+            prevNetButton.addEventListener('click', function() {
+                if (netIndex > 0) {
+                    netIndex--;
+                    updatePlot();
+                }
+            });
+
+        });
+
+    </script>
+</body>
+</html>
+
