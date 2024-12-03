@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>2-to-1 Euler Tour Visualization</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+    <style type="text/css">
+        #mynetwork {
+            width: 800px;
+            height: 600px;
+            border: 1px solid lightgray;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>2-to-1 Euler Tour Visualization</h2>
+
+<div>
+    <label>Number of Vertices:</label>
+    <input type="number" id="vertexCount" min="1" value="5">
+</div>
+<div>
+    <label>Edges (Format: u v, one per line):</label><br>
+    <textarea id="edgesInput" rows="5" cols="30">1 2
+2 3
+3 4
+4 5
+5 1</textarea>
+</div>
+<div>
+    <label>Starting Vertex:</label>
+    <input type="number" id="startVertex" min="1" value="1">
+</div>
+<button onclick="initializeGraph()">Initialize Graph</button>
+
+<div id="mynetwork"></div>
+
+<div id="controls">
+    <button onclick="nextStep()">Next Step</button>
+</div>
+
+<script type="text/javascript">
+    var nodes = null;
+    var edges = null;
+    var network = null;
+    var tour = [];
+    var tourIndex = 0;
+    var edgeTraversalCount = {};
+    var adjacencyList = {};
+    var edgeIds = {};
+
+    function initializeGraph() {
+        // Reset variables
+        nodes = new vis.DataSet([]);
+        edges = new vis.DataSet([]);
+        tour = [];
+        tourIndex = 0;
+        edgeTraversalCount = {};
+        adjacencyList = {};
+        edgeIds = {};
+
+        // Get user input
+        var vertexCount = parseInt(document.getElementById('vertexCount').value);
+        var edgesInput = document.getElementById('edgesInput').value.trim().split('\n');
+        var startVertex = parseInt(document.getElementById('startVertex').value);
+
+        // Create nodes
+        for (var i = 1; i <= vertexCount; i++) {
+            nodes.add({id: i, label: i.toString()});
+            adjacencyList[i] = [];
+        }
+
+        // Create edges
+        var edgeIdCounter = 1;
+        edgesInput.forEach(function(line) {
+            var parts = line.trim().split(' ');
+            var u = parseInt(parts[0]);
+            var v = parseInt(parts[1]);
+            if (u && v) {
+                // Add to adjacency list
+                adjacencyList[u].push({vertex: v, traversed: 0});
+                adjacencyList[v].push({vertex: u, traversed: 0});
+
+                // Create unique edge key
+                var edgeKey = u < v ? u + '-' + v : v + '-' + u;
+                if (!edgeIds[edgeKey]) {
+                    edgeIds[edgeKey] = edgeIdCounter++;
+                    edgeTraversalCount[edgeKey] = 0;
+                    edges.add({id: edgeIds[edgeKey], from: u, to: v, color: 'black'});
+                }
+            }
+        });
+
+        // Initialize network
+        var container = document.getElementById('mynetwork');
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        var options = {};
+        network = new vis.Network(container, data, options);
+
+        // Find Euler tour
+        findEulerTour(startVertex);
+
+        // Reset edge colors
+        edges.forEach(function(edge) {
+            edges.update({id: edge.id, color: 'black'});
+        });
+    }
+
+    function findEulerTour(u) {
+        var stack = [];
+        var tourPath = [];
+
+        function dfs(u) {
+            var neighbors = adjacencyList[u];
+            for (var i = 0; i < neighbors.length; i++) {
+                var v = neighbors[i].vertex;
+                if (neighbors[i].traversed < 2) {
+                    neighbors[i].traversed++;
+                    // Update reverse edge traversal count
+                    var reverseNeighbors = adjacencyList[v];
+                    for (var j = 0; j < reverseNeighbors.length; j++) {
+                        if (reverseNeighbors[j].vertex == u) {
+                            reverseNeighbors[j].traversed++;
+                            break;
+                        }
+                    }
+                    dfs(v);
+                    tourPath.push(u);
+                }
+            }
+        }
+
+        dfs(u);
+        tour = tourPath.reverse();
+        tour.unshift(u);
+    }
+
+    function nextStep() {
+        if (tourIndex < tour.length - 1) {
+            var u = tour[tourIndex];
+            var v = tour[tourIndex + 1];
+
+            // Update edge color
+            var edgeKey = u < v ? u + '-' + v : v + '-' + u;
+            edgeTraversalCount[edgeKey]++;
+            var edgeColor = 'red'; // Once traversed
+            if (edgeTraversalCount[edgeKey] == 2) {
+                edgeColor = 'blue'; // Twice traversed
+            }
+            var edgeId = edgeIds[edgeKey];
+            edges.update({id: edgeId, color: edgeColor});
+
+            tourIndex++;
+        } else {
+            alert('Tour completed!');
+        }
+    }
+</script>
+
+</body>
+</html>
+
+

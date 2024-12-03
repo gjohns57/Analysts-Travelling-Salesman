@@ -21,11 +21,13 @@ public:
 
     vector<int> findEulerTour() {
         vector<int> tour;
-        int start_vertex = 1; // always start at vertex 1
+        int start_vertex;
+        cout << "Enter starting vertex: " << endl;
+        cin >> start_vertex;
 
         // check if vertex 1 exists in the graph
-        if (adj.find(1) == adj.end() || adj[1].empty()) {
-            cout << "Vertex 1 is not present or is isolated. Cannot start tour from vertex 1." << endl;
+        if (adj.find(start_vertex) == adj.end() || adj[start_vertex].empty()) {
+            cout << "Requested vertex is not present or is isolated. Cannot start tour from this vertex." << endl;
             return tour;
         }
 
