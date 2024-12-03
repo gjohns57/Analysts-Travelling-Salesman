@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <point.h>
 #include <cstdio>
@@ -9,6 +11,8 @@ public:
 
     iterator begin();
     iterator end();
+
+    void add_point(point<2> p);
 
     pointset operator&(const pointset& ro) const;
     pointset operator|(const pointset& ro) const;

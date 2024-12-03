@@ -1,0 +1,8 @@
+\documentclass{article}
+\usepackage{tikz}
+
+\title{Your Title Here}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
