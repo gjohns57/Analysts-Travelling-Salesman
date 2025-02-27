@@ -37,4 +37,25 @@ public:
             result.coords[i] = this->coords[i] - other.coords[i];
         return result;
     }
+
+    double operator*(const point<N>& other) const {
+        double result = 0;
+        for (int i = 0; i < N; i++)
+            result += this->coords[i] * other.coords[i];
+        return result;
+    }
+
+    point<N> operator*(double scalar) const {
+        point<N> result;
+        for (int i = 0; i < N; i++)
+            result.coords[i] = this->coords[i] * scalar;
+        return result;
+    }
+
+    point<N> operator/(double scalar) const {
+        point<N> result;
+        for (int i = 0; i < N; i++)
+            result.coords[i] = this->coords[i] / scalar;
+        return result;
+    }
 };
