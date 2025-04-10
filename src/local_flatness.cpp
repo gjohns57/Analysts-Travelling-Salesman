@@ -1,8 +1,7 @@
-#include <local_flatness.h>
+#include "local_flatness.hpp"
 
 #include <vector>
 #include <cmath>
-#include <iterator>
 #include <utility>
 
 #define C0 300
@@ -46,7 +45,7 @@ point<2> get_boundary_point(point<2> center, int side, double radius, double off
     return ret;
 }
 
-cylinder find_thinnest_cylinder(std::vector<point<2>> &ps, point<2> v, double radius)
+cylinder find_thinnest_cylinder(std::vector<point<2> > &ps, point<2> v, double radius)
 {
     int l = 1;
     double width = 1.0e300;
@@ -94,8 +93,8 @@ cylinder find_thinnest_cylinder(std::vector<point<2>> &ps, point<2> v, double ra
     return cylinder(width, cx0, cx1);
 }
 
-std::vector<point<2>> get_points_in_ball(point<2> v, std::vector<point<2>> xp, double radius) {
-    std::vector<point<2>> ret;
+std::vector<point<2> > get_points_in_ball(point<2> v, std::vector<point<2> > xp, double radius) {
+    std::vector<point<2> > ret;
 
     for (point<2> p : xp) {
         if ((p[0] - v[0]) * (p[0] - v[0]) + (p[1] - v[1]) * (p[1] - v[1]) < radius * radius) {
@@ -106,11 +105,11 @@ std::vector<point<2>> get_points_in_ball(point<2> v, std::vector<point<2>> xp, d
     return ret;
 }
 
-std::vector<std::pair<point<2>,point<2>>> flat_pairs(std::vector<point<2>> &x, std::vector<point<2>> &xp, double epsilon, long k) {
-    std::vector<std::pair<point<2>,point<2>>> ret;
+std::vector<std::pair<point<2>,point<2> > > flat_pairs(std::vector<point<2> > &x, std::vector<point<2> > &xp, double epsilon, long k) {
+    std::vector<std::pair<point<2>,point<2> > > ret;
 
     for (point<2> p : x) {
-        std::vector<point<2>> xp_in_ball = get_points_in_ball(p, xp, epsilon);
+        std::vector<point<2> > xp_in_ball = get_points_in_ball(p, xp, epsilon);
         cylinder c = find_thinnest_cylinder(xp_in_ball, p, epsilon);
         double alpha = (1 << k) * c.width / epsilon;
 
@@ -122,7 +121,7 @@ std::vector<std::pair<point<2>,point<2>>> flat_pairs(std::vector<point<2>> &x, s
                     continue;
                 }
 
-                double component = fabs((q - p) * (c.x1 - c.x0) / (c.x1 - c.x0).norm2());  
+                double component = fabs((q - p) * (c.x1 - c.x0) / (c.x1 - c.x0).norm2());
                 if (component < min_cylinar_aligned_component) {
                     min_cylinar_aligned_component = component;
                     next_point = q;
@@ -134,4 +133,5 @@ std::vector<std::pair<point<2>,point<2>>> flat_pairs(std::vector<point<2>> &x, s
             }
         }
     }
+    return ret;
 }
