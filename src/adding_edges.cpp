@@ -28,7 +28,6 @@ public:
     }
 
     void add_edge(const Point& p1, const Point& p2) {
-        // Add in both directions since it's an undirected graph
         adjacency_list[p1].push_back(p2);
         adjacency_list[p2].push_back(p1);
     }
@@ -54,7 +53,6 @@ public:
     }
 };
 
-// Convert from Point to point<2> as required by local_flatness functions
 point<2> convert_to_point2(const Point& p) {
     point<2> result;
     result[0] = p.x_value();
@@ -62,11 +60,10 @@ point<2> convert_to_point2(const Point& p) {
     return result;
 }
 
-Point convert_to_Point(point<2>& p) {
+Point convert_to_Point(point<2>& p) { // PROBLEM HERE
     return Point(p[0], p[1]);
 }
 
-// Convert a vector of Points to a vector of point<2>
 vector<point<2> > convert_points_vector(const vector<Point>& points) {
     vector<point<2> > result;
     for (const Point& p : points) {
@@ -119,56 +116,42 @@ int main() {
         cout << "}" << endl;
         counter++;
     }
-
-    // Initialize the graph with all points
     Graph graph(points);
-
-    // Convert nets to a vector for easier sequential access
     vector<vector<Point> > nets_vector(nets.begin(), nets.end());
-
-    // Track points that have been processed
     std::set<Point> processed_points;
-
-    // Process each net sequentially
     for (size_t i = 0; i < nets_vector.size() - 1; i++) {
         vector<Point> current_net = nets_vector[i];
         vector<Point> next_net = nets_vector[i+1];
-
-        // Add points from current net to processed
+        // add points from current net to processed
         for (const Point& p : current_net) {
             processed_points.insert(p);
         }
-
-        // Find points added in the next net (not in current net)
+        // find points added in the next net (not in current net)
         vector<Point> new_points;
         for (const Point& p : next_net) {
             if (find(current_net.begin(), current_net.end(), p) == current_net.end()) {
                 new_points.push_back(p);
             }
         }
-
-        // Convert to point<2> format for local flatness calculations
+        // convert to point<2> format for local flatness calculations
         vector<point<2> > current_points2 = convert_points_vector(current_net);
         vector<point<2> > next_points2 = convert_points_vector(next_net);
 
-        // Calculate flatness between points
+        // calculate flatness between points
         for (size_t j = 0; j < current_net.size(); j++) {
             Point p1 = current_net[j];
             point<2> p1_2 = convert_to_point2(p1);
-
-            // Get epsilon value for this net level
+            // get epsilon value for this net level
             double epsilon = pow(0.5, set[i]);
             long k = set[i];
-
-            // Find flat pairs between current point and points in next net
+            // find flat pairs between current point and points in next net
             vector<pair<point<2>, point<2> > > flat_point_pairs = flat_pairs({p1_2}, next_points2, epsilon, k);
 
-            // Add edges for flat pairs
+            // add edges for flat pairs
             for (const auto& pair : flat_point_pairs) {
                 Point flat_p1 = convert_to_Point(pair.first);
                 Point flat_p2 = convert_to_Point(pair.second);
-
-                // Only add edge if it's not already in the graph
+                // only add edge if it's not already in the graph
                 if (!graph.has_edge(flat_p1, flat_p2)) {
                     graph.add_edge(flat_p1, flat_p2);
                     cout << "Added edge: " << output_point(flat_p1) << " - " << output_point(flat_p2) << endl;
