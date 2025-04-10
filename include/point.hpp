@@ -1,7 +1,5 @@
 #pragma once
-
-#include <cmath>
-
+#include <math.h>
 template <int N>
 class point {
     double coords[N];

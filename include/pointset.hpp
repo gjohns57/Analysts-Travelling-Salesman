@@ -1,13 +1,13 @@
 #pragma once
 
 #include <vector>
-#include <point.h>
+#include "point.hpp"
 #include <cstdio>
 
 class pointset {
-    std::vector<point<2>> points;
+    std::vector<point<2> > points;
 public:
-    using iterator = std::vector<point<2>>::iterator;
+    using iterator = std::vector<point<2> >::iterator;
 
     iterator begin();
     iterator end();
