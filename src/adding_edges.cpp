@@ -1,6 +1,4 @@
 #include <iostream>
-#include <iterator>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 #include <cmath>
@@ -10,6 +8,7 @@
 #include <set>
 #include <map>
 #include "local_flatness.hpp"
+#include "local_flatness_impl.hpp"
 #include "nets.hpp"
 
 using namespace std;
@@ -103,12 +102,12 @@ int main() {
     }
     cout << "}" << '\n' << '\n';
 
-    // Generate all nets
+    // generate all nets
     nets = generate_all_nets(points, v0, set, distances);
 
-    // Print the generated nets
+    // print the generated nets
     int counter = 1;
-    for (const auto& net : nets) {
+    for (const vector<Point>& net : nets) {
         cout << "Net number " << counter << ": { ";
         for (Point point : net) {
             cout << output_point(point) << " ";
@@ -116,6 +115,7 @@ int main() {
         cout << "}" << endl;
         counter++;
     }
+
     Graph graph(points);
     vector<vector<Point> > nets_vector(nets.begin(), nets.end());
     std::set<Point> processed_points;
@@ -138,6 +138,7 @@ int main() {
         vector<point<2> > next_points2 = convert_points_vector(next_net);
 
         // calculate flatness between points
+
         for (size_t j = 0; j < current_net.size(); j++) {
             Point p1 = current_net[j];
             point<2> p1_2 = convert_to_point2(p1);
@@ -145,10 +146,11 @@ int main() {
             double epsilon = pow(0.5, set[i]);
             long k = set[i];
             // find flat pairs between current point and points in next net
-            vector<pair<point<2>, point<2> > > flat_point_pairs = flat_pairs({p1_2}, next_points2, epsilon, k);
-
+            vector<point<2> > single_point_vector;
+            single_point_vector.push_back(p1_2);
+            vector<pair<point<2>, point<2> > > flat_point_pairs = flat_pairs(single_point_vector, next_points2, epsilon, k);
             // add edges for flat pairs
-            for (const auto& pair : flat_point_pairs) {
+            for (std::pair<point<2>,point<2> >& pair : flat_point_pairs) {
                 Point flat_p1 = convert_to_Point(pair.first);
                 Point flat_p2 = convert_to_Point(pair.second);
                 // only add edge if it's not already in the graph
