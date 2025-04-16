@@ -1,3 +1,0 @@
-/home/gjohns57/atsp/Analysts-Travelling-Salesman/build/CMakeFiles/igraph_test.dir
-/home/gjohns57/atsp/Analysts-Travelling-Salesman/build/CMakeFiles/edit_cache.dir
-/home/gjohns57/atsp/Analysts-Travelling-Salesman/build/CMakeFiles/rebuild_cache.dir
