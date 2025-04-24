@@ -5,7 +5,7 @@ project(ATSP)
 include_directories(include)
 
 add_executable(atsp
-    src/adding_edges.cpp)
+    src/adding_edges_Fk.cpp)
 
 set(CMAKE_CXX_STANDARD 17)
 
