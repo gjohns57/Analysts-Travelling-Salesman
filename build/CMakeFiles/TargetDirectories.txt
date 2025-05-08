@@ -1,3 +1,0 @@
-/home/rlawren9/Analysts-Travelling-Salesman/build/CMakeFiles/atsp.dir
-/home/rlawren9/Analysts-Travelling-Salesman/build/CMakeFiles/edit_cache.dir
-/home/rlawren9/Analysts-Travelling-Salesman/build/CMakeFiles/rebuild_cache.dir
