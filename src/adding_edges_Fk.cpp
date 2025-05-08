@@ -60,7 +60,7 @@ int main() {
         Points.push_back(p);
     }
 
-    for (int i = 0;i<num_points;i++) { // build points vector from Points
+    for (int i = 0;i<num_points;i++) { // build point<2> vector from Points
         point<2> temp = convert_Point(Points[i]);
         points.push_back(temp);
         // the assignments are arbitrary, as long as they are consistent
@@ -86,21 +86,20 @@ int main() {
     set<vector<Point> > nets = generate_all_nets(Points, v0, scales, distances);
     vector<pair<vector<point<2> >,vector<tuple<point<2>,cylinder,vector<point<2> > > > > > flat_points; // first is a net, second is
     // a tuple of a flat point, its cylinder, and the points in its ball
-    size_t k = 0;
+    size_t k = 0; // represents the kth net
     bool val = true;
     vector<vector<point<2> > > p_nets;
     // for loop below builds all the F_k's
     for (vector<Point> net : nets) { // go through each net, we test each point in each net for flatness
         // convert Point net to a point<2> net
         vector<point<2> > p_net;
-        p_nets.push_back(p_net);
         for (Point p : net) {
             p_net.push_back(convert_Point(p));
         }
+        p_nets.push_back(p_net);
         vector<tuple<point<2>,cylinder,vector<point<2> > > > flat_points_in_net; // each flat point is with its cylinder and ball
-        for (Point p : net) { // to test a point for flatness, we have to run the find_thinnest_cylinder
+        for (point<2> p_2 : p_net) { // to test a point for flatness, we have to run the find_thinnest_cylinder
             // function on the points in the ball of size epsilon
-            point<2> p_2 = convert_Point(p);
             if ((k+1) == nets.size()) {
                 val = false;
                 break;
@@ -120,29 +119,101 @@ int main() {
         if (!val) {
             break;
         }
-        p_net.clear(); // clear p_net so we can reuse this vect for the next net
+        // p_net.clear(); don't need to clear p_net since it's shadowed in each loop
     }
     for (pair<vector<point<2> >, vector<tuple<point<2>,cylinder,vector<point<2> > > > > pair_flat_net : flat_points) {
-        if (pair_flat_net.first.size() == 1 || pair_flat_net.first.size() == 0) {
+        if (pair_flat_net.first.size() == 1 || pair_flat_net.first.size() == 0) { // error check
             continue;
         }
-        // what do i want to do
-        //
-        // i need to go through all the flat points in each net, and run the transformation on each point in the net,
-        // using the flat point as v. The values from the transformation we'll store as pairs of point<2>s and doubles.
-        // Then, we go through that vector and see what side the points are on.
-        //
-        // if the points are only on one side, then we can go through the other side and connect all the points in the graph
-        // if the points are on both sides, then we can stop.
+
+        vector<pair<point<2>,double> > transformed_vals;
+        enum status {
+            NONE,
+            LEFT,
+            RIGHT,
+            BOTH
+        };
         for (tuple<point<2>,cylinder,vector<point<2> > > flat_point : pair_flat_net.second) {
-            vector<pair<point<2>,double> > transformed_vals;
             for (point<2> p : get<2>(flat_point)) {
                 transformed_vals.push_back(make_pair(p,transformation(get<0>(flat_point), get<1>(flat_point),p)));
             }
+            // sort the vector so that we can add edges easier
+            sort(transformed_vals.begin(),transformed_vals.end(),[](pair<point<2>,double> a, pair<point<2>,double> b) {
+                return a.second < b.second; // sorts in ascending order
+            });
             // now the transformed_vals vector is filled with pairs of points and their transformed vals
+            // todo: traverse the trans_val vect and see what sides the points are on. adding the edges should be easy
+            enum status current_status = NONE;
+            int flat_point_index = 0;
+            for (int i = 0;i<transformed_vals.size();i++) {
+                if (transformed_vals[i].second == 0) { // store the flat_point_index in the transformed vals vect
+                    flat_point_index = i;
+                }
+                // we cover all the cases
+                if (transformed_vals[i].second < 0 && current_status == NONE) {
+                    current_status = LEFT;
+                }
+                else if (transformed_vals[i].second > 0 && current_status == NONE) {
+                    current_status = RIGHT;
+                }
+                else if (transformed_vals[i].second > 0 && current_status == LEFT) {
+                    current_status = BOTH;
+                }
+                else if (transformed_vals[i].second < 0 && current_status == RIGHT) {
+                    current_status = BOTH;
+                }
+            }
+            if (current_status == LEFT) { // go through all the points to the left of v and connect in a chain
+
+                point<2> previous = transformed_vals[0].first; // this is the first point that we'll use to make an edge; it'll also be used to store the previous point
+                int previous_index = 0; // we don't actually know this yet, we find it in the following loop
+                for (pair<point<2>,int> assignment : assignments) {
+                    if (assignment.first[0] == previous[0] && assignment.first[1] == previous[1]) {
+                        // this for loop finds the assignment index for the first point in the transformed vals vector
+                        previous_index = assignment.second;
+                    }
+                }
+                // starting at 1 since we already found i = 0
+                for (int i = 1;i<=flat_point_index;i++) { // walk UP from the left
+
+                    for (pair<point<2>,int> assignment : assignments) { // we now have to find the numerical index of this point in the graph adjmatrix
+
+                        if (assignment.first[0] == get<0>(flat_point)[0] && assignment.first[1] == get<0>(flat_point)[1]) {
+                            adjmatrix[assignment.second][previous_index] = 1;
+                            adjmatrix[previous_index][assignment.second] = 1;
+                            previous_index = assignment.second; // this is the key; we change the last vertex to previous_index to keep the chain going
+                        }
+                    }
+                }
+            }
+
+            else if (current_status == RIGHT) {
+                // this is the first point that we'll use to make an edge; it'll also be used to store the previous point
+                point<2> previous = transformed_vals[transformed_vals.size() - 1].first;
+                int previous_index = 0; // we find this in the next for loop
+                for (pair<point<2>,int> assignment : assignments) {
+                    if (assignment.first[0] == previous[0] && assignment.first[1] == previous[1]) {
+                        // this for loop finds the assignment index for the last point in the transformed vals vector
+                        previous_index = assignment.second;
+                    }
+                }
+                // starting at transformed_vals.size() - 2 since we already did transformed_vals.size() - 1
+                for (int i = transformed_vals.size() - 2;i>=flat_point_index;i--) { // walk DOWN from the right
+
+                    for (pair<point<2>,int> assignment : assignments) { // we now have to find the numerical index of this point in the graph adjmatrix
+
+                        if (assignment.first[0] == get<0>(flat_point)[0] && assignment.first[1] == get<0>(flat_point)[1]) {
+                            adjmatrix[assignment.second][previous_index] = 1;
+                            adjmatrix[previous_index][assignment.second] = 1;
+                            previous_index = assignment.second; // this is the key; we change the last vertex to previous_index to keep the chain going
+                        }
+                    }
+                }
+            }
+            // BOTH doesn't need anything to be done
         }
     }
-    for (pair<vector<point<2> >,vector<tuple<point<2>,cylinder,vector<point<2> >> > > x : flat_points) {
+    for (pair<vector<point<2> >,vector<tuple<point<2>,cylinder,vector<point<2> > > > > x : flat_points) {
         for (point<2> p : x.first) {
             cout << "Net: \n";
             cout << "(" << p[0] << " " << p[1] << ") ";
@@ -152,5 +223,11 @@ int main() {
             cout << "Flat points in net: \n";
             cout << "(" << get<0>(p)[0] << " " << get<0>(p)[1] << ") ";
         }
+    }
+    for (vector<int> vect : adjmatrix) {
+        for (int element : vect) {
+            cout << element << " ";
+        }
+        cout << '\n';
     }
 }
