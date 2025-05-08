@@ -45,8 +45,7 @@ point<2> get_boundary_point(point<2> center, int side, double radius, double off
     return ret;
 }
 
-cylinder find_thinnest_cylinder(std::vector<point<2> > &ps, point<2> v, double radius)
-{
+cylinder find_thinnest_cylinder(std::vector<point<2> > &ps, point<2> v, double radius) {
     int l = 1;
     double width = 1.0e300;
     point<2> cx0, cx1;
@@ -95,13 +94,11 @@ cylinder find_thinnest_cylinder(std::vector<point<2> > &ps, point<2> v, double r
 
 std::vector<point<2> > get_points_in_ball(point<2> v, std::vector<point<2> > xp, double radius) {
     std::vector<point<2> > ret;
-
     for (point<2> p : xp) {
         if ((p[0] - v[0]) * (p[0] - v[0]) + (p[1] - v[1]) * (p[1] - v[1]) < radius * radius) {
             ret.push_back(p);
         }
     }
-
     return ret;
 }
 

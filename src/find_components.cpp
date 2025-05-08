@@ -6,16 +6,16 @@
 #include <string>
 #include <sstream>
 
-typedef std::pair<std::vector<int>, std::vector<std::pair<int, int>>> graph;
+typedef std::pair<std::vector<int>, std::vector<std::pair<int, int> > > graph;
 
 void printComponents(std::vector<graph> G);
 
-std::vector<graph> findComponents(std::vector<int> V, std::vector<std::pair<int, int>> E, int node, int *index) {
+std::vector<graph> findComponents(std::vector<int> V, std::vector<std::pair<int, int> > E, int node, int *index) {
     std::vector<graph> G;
     std::vector<int> verts;
-    std::vector<std::pair<int, int>> edges;
+    std::vector<std::pair<int, int> > edges;
     std::queue<int> q;
-    std::unordered_set<int> visited; 
+    std::unordered_set<int> visited;
     visited.reserve(V.size());
 
     int graph_index = 0;
@@ -24,9 +24,9 @@ std::vector<graph> findComponents(std::vector<int> V, std::vector<std::pair<int,
         if(visited.find(V[v]) != visited.end()) {
             continue;
         }
-        
+
         q.push(V[v]);
-        
+
         while(!q.empty()) {
             int current = q.front();
             q.pop();
@@ -107,7 +107,7 @@ graph connectGraph(std::vector<graph> G, int node, int index) {
     }
     total_vert_size += G[index].first.size();
     total_edge_size += G[index].second.size();
-    
+
     graph C;
     C.first.reserve(total_vert_size);
     C.second.reserve(total_edge_size);
@@ -120,7 +120,7 @@ graph connectGraph(std::vector<graph> G, int node, int index) {
     return C;
 }
 
-graph getGraph(std::vector<int> V, std::vector<std::pair<int, int>> E, int node) {
+graph getGraph(std::vector<int> V, std::vector<std::pair<int, int> > E, int node) {
     int index = -1;
 
     std::vector<graph> G = findComponents(V, E, node, &index);
@@ -131,7 +131,7 @@ graph getGraph(std::vector<int> V, std::vector<std::pair<int, int>> E, int node)
 
 void printComponents(std::vector<graph> G) {
     std::vector<int> x;
-    std::vector<std::pair<int, int>> y;
+    std::vector<std::pair<int, int> > y;
     for(size_t i = 0; i < G.size(); i++) {
         std::cout << "Graph " << i + 1 << ":\n\t";
         x = G[i].first;
@@ -167,7 +167,7 @@ void printGraph(graph C) {
 
 int main() {
     std::vector<int> V;
-    std::vector<std::pair<int, int>> E;
+    std::vector<std::pair<int, int> > E;
 
     std::cout << "Enter verts: ";
     std::string line;
