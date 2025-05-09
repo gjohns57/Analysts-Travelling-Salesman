@@ -177,6 +177,9 @@ int main() {
                     for (pair<point<2>,int> assignment : assignments) { // we now have to find the numerical index of this point in the graph adjmatrix
 
                         if (assignment.first[0] == get<0>(flat_point)[0] && assignment.first[1] == get<0>(flat_point)[1]) {
+                            if (assignment.second == previous_index) {
+                                continue;
+                            }
                             adjmatrix[assignment.second][previous_index] = 1;
                             adjmatrix[previous_index][assignment.second] = 1;
                             previous_index = assignment.second; // this is the key; we change the last vertex to previous_index to keep the chain going
@@ -216,7 +219,7 @@ int main() {
     for (auto entry : flat_points) {
         cout << "Net " << count << ": \n";
         for (point<2> p : entry.first) { // print out nets
-            cout << "(" << p[0] << ", " << p[1] << "), ";
+            cout << "(" << p[0] << ", " << p[1] << ") ";
         }
         cout << "\nFlat points in net " << count << ":\n";
         if (entry.second.empty()) {
@@ -229,5 +232,12 @@ int main() {
         }
         cout << '\n';
         count++;
+        // print graph
+        for (vector<int> vect : adjmatrix) {
+            for (int element : vect) {
+                cout << element << "  ";
+            }
+            cout << '\n';
+        }
     }
 }
