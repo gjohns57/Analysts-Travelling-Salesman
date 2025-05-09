@@ -75,7 +75,7 @@ int main() {
         return 1;
     }
 
-    std::unordered_map<std::pair<Point, Point>, double,PointPairHash,PointPairEqual> distances = generate_distances(Points);
+    unordered_map<pair<Point, Point>, double,PointPairHash,PointPairEqual> distances = generate_distances(Points);
     vector<int> scales = generate_S(Points, distances, v0);
 
     cout << "Scales:\n";
@@ -113,9 +113,7 @@ int main() {
             }
         }
         k++;
-        if (!flat_points_in_net.empty()) {
-            flat_points.push_back(make_pair(p_net,flat_points_in_net));
-        }
+        flat_points.push_back(make_pair(p_net,flat_points_in_net));
         if (!val) {
             break;
         }
@@ -179,6 +177,9 @@ int main() {
                     for (pair<point<2>,int> assignment : assignments) { // we now have to find the numerical index of this point in the graph adjmatrix
 
                         if (assignment.first[0] == get<0>(flat_point)[0] && assignment.first[1] == get<0>(flat_point)[1]) {
+                            if (assignment.second == previous_index) {
+                                continue;
+                            }
                             adjmatrix[assignment.second][previous_index] = 1;
                             adjmatrix[previous_index][assignment.second] = 1;
                             previous_index = assignment.second; // this is the key; we change the last vertex to previous_index to keep the chain going
@@ -213,21 +214,30 @@ int main() {
             // BOTH doesn't need anything to be done
         }
     }
-    for (pair<vector<point<2> >,vector<tuple<point<2>,cylinder,vector<point<2> > > > > x : flat_points) {
-        for (point<2> p : x.first) {
-            cout << "Net: \n";
-            cout << "(" << p[0] << " " << p[1] << ") ";
+    // print nets, flat points, etc.
+    int count = 1;
+    for (auto entry : flat_points) {
+        cout << "Net " << count << ": \n";
+        for (point<2> p : entry.first) { // print out nets
+            cout << "(" << p[0] << ", " << p[1] << ") ";
+        }
+        cout << "\nFlat points in net " << count << ":\n";
+        if (entry.second.empty()) {
+            cout << "No flat points in net.\n";
+        }
+        for (auto tup : entry.second) {
+            if (!get<2>(tup).empty()) {
+                cout << "(" << get<0>(tup)[0] << ", " <<get<0>(tup)[1] << ") \n";
+            }
         }
         cout << '\n';
-        for (tuple<point<2>,cylinder,vector<point<2> > > p : x.second) {
-            cout << "Flat points in net: \n";
-            cout << "(" << get<0>(p)[0] << " " << get<0>(p)[1] << ") ";
+        count++;
+        // print graph
+        for (vector<int> vect : adjmatrix) {
+            for (int element : vect) {
+                cout << element << "  ";
+            }
+            cout << '\n';
         }
-    }
-    for (vector<int> vect : adjmatrix) {
-        for (int element : vect) {
-            cout << element << " ";
-        }
-        cout << '\n';
     }
 }
